@@ -131,6 +131,40 @@ jobs:
               }
             ' config.llvm.toml > config.llvm.toml.tmp
             mv config.llvm.toml.tmp config.llvm.toml
+            # rustc_llvm's build.rs (wasm17 series) hard-derives its C++
+            # compiler as $WASI_SYSROOT/../../bin/<target>-clang++ via
+            # cfg.compiler(), bypassing config and env. Serve every such
+            # derivation a wrapper: a shadow SDK whose sysroot is a REAL
+            # directory (`..` resolves physically — a symlinked sysroot dir
+            # would escape back to the raw SDK) with symlinked contents,
+            # and whose bin/ mirrors the SDK with the two triple compilers
+            # replaced by the wrappers.
+            SDK="${WS_FORWARD}/rust/wasi-sdk"
+            SHADOW="${WS_FORWARD}/ccfix-sdk"
+            mkdir -p "$SHADOW/share/wasi-sysroot" "$SHADOW/bin"
+            ln -sf "$SDK/share/wasi-sysroot/"* "$SHADOW/share/wasi-sysroot/"
+            ln -sfn "$SDK/lib" "$SHADOW/lib"
+            ln -sf "$SDK/bin/"* "$SHADOW/bin/"
+            for t in clang clang++; do
+              # the mirror made this name a symlink — writing through it
+              # would clobber the real SDK compiler with a self-exec loop
+              rm -f "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              printf '#!/bin/sh\nexec "%s/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "$SDK" "$t" > "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              chmod +x "$SHADOW/bin/wasm32-wasip1-threads-$t"
+            done
+            sed "s|$SDK/share/wasi-sysroot|$SHADOW/share/wasi-sysroot|g" config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+            echo "WASI_SDK_PATH=$SHADOW" >> $GITHUB_ENV
+            echo "WASI_SYSROOT=$SHADOW/share/wasi-sysroot" >> $GITHUB_ENV
+            # Tripwire: reproduce rustc_llvm's exact derivation and flag
+            # shape against <shared_mutex>; fails the job in seconds if the
+            # multilib hole ever reopens, instead of three hours in.
+            printf '#include <shared_mutex>\nint main(){return 0;}\n' > /tmp/ccfix-probe.cpp
+            "$SHADOW/share/wasi-sysroot/../../bin/wasm32-wasip1-threads-clang++" \
+              -x c++ -std=c++17 -fsyntax-only -pthread --target=wasm32-wasi \
+              --sysroot="$SHADOW/share/wasi-sysroot" /tmp/ccfix-probe.cpp \
+              || { echo "TRIPWIRE FAIL: no-threads multilib selected via shadow SDK derivation"; exit 1; }
+            echo "tripwire OK: shadow-SDK derivation compiles <shared_mutex>"
           fi
           echo "=== config.llvm.toml after patching ==="
           grep -E "wasi|ccfix" config.llvm.toml || true
@@ -280,6 +314,40 @@ jobs:
               }
             ' config.llvm.toml > config.llvm.toml.tmp
             mv config.llvm.toml.tmp config.llvm.toml
+            # rustc_llvm's build.rs (wasm17 series) hard-derives its C++
+            # compiler as $WASI_SYSROOT/../../bin/<target>-clang++ via
+            # cfg.compiler(), bypassing config and env. Serve every such
+            # derivation a wrapper: a shadow SDK whose sysroot is a REAL
+            # directory (`..` resolves physically — a symlinked sysroot dir
+            # would escape back to the raw SDK) with symlinked contents,
+            # and whose bin/ mirrors the SDK with the two triple compilers
+            # replaced by the wrappers.
+            SDK="${WS_FORWARD}/rust/wasi-sdk"
+            SHADOW="${WS_FORWARD}/ccfix-sdk"
+            mkdir -p "$SHADOW/share/wasi-sysroot" "$SHADOW/bin"
+            ln -sf "$SDK/share/wasi-sysroot/"* "$SHADOW/share/wasi-sysroot/"
+            ln -sfn "$SDK/lib" "$SHADOW/lib"
+            ln -sf "$SDK/bin/"* "$SHADOW/bin/"
+            for t in clang clang++; do
+              # the mirror made this name a symlink — writing through it
+              # would clobber the real SDK compiler with a self-exec loop
+              rm -f "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              printf '#!/bin/sh\nexec "%s/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "$SDK" "$t" > "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              chmod +x "$SHADOW/bin/wasm32-wasip1-threads-$t"
+            done
+            sed "s|$SDK/share/wasi-sysroot|$SHADOW/share/wasi-sysroot|g" config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+            echo "WASI_SDK_PATH=$SHADOW" >> $GITHUB_ENV
+            echo "WASI_SYSROOT=$SHADOW/share/wasi-sysroot" >> $GITHUB_ENV
+            # Tripwire: reproduce rustc_llvm's exact derivation and flag
+            # shape against <shared_mutex>; fails the job in seconds if the
+            # multilib hole ever reopens, instead of three hours in.
+            printf '#include <shared_mutex>\nint main(){return 0;}\n' > /tmp/ccfix-probe.cpp
+            "$SHADOW/share/wasi-sysroot/../../bin/wasm32-wasip1-threads-clang++" \
+              -x c++ -std=c++17 -fsyntax-only -pthread --target=wasm32-wasi \
+              --sysroot="$SHADOW/share/wasi-sysroot" /tmp/ccfix-probe.cpp \
+              || { echo "TRIPWIRE FAIL: no-threads multilib selected via shadow SDK derivation"; exit 1; }
+            echo "tripwire OK: shadow-SDK derivation compiles <shared_mutex>"
           fi
           echo "=== config.llvm.toml after patching ==="
           grep -E "wasi|ccfix" config.llvm.toml || true
@@ -660,6 +728,40 @@ jobs:
               }
             ' config.llvm.toml > config.llvm.toml.tmp
             mv config.llvm.toml.tmp config.llvm.toml
+            # rustc_llvm's build.rs (wasm17 series) hard-derives its C++
+            # compiler as $WASI_SYSROOT/../../bin/<target>-clang++ via
+            # cfg.compiler(), bypassing config and env. Serve every such
+            # derivation a wrapper: a shadow SDK whose sysroot is a REAL
+            # directory (`..` resolves physically — a symlinked sysroot dir
+            # would escape back to the raw SDK) with symlinked contents,
+            # and whose bin/ mirrors the SDK with the two triple compilers
+            # replaced by the wrappers.
+            SDK="${WS_FORWARD}/rust/wasi-sdk"
+            SHADOW="${WS_FORWARD}/ccfix-sdk"
+            mkdir -p "$SHADOW/share/wasi-sysroot" "$SHADOW/bin"
+            ln -sf "$SDK/share/wasi-sysroot/"* "$SHADOW/share/wasi-sysroot/"
+            ln -sfn "$SDK/lib" "$SHADOW/lib"
+            ln -sf "$SDK/bin/"* "$SHADOW/bin/"
+            for t in clang clang++; do
+              # the mirror made this name a symlink — writing through it
+              # would clobber the real SDK compiler with a self-exec loop
+              rm -f "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              printf '#!/bin/sh\nexec "%s/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "$SDK" "$t" > "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              chmod +x "$SHADOW/bin/wasm32-wasip1-threads-$t"
+            done
+            sed "s|$SDK/share/wasi-sysroot|$SHADOW/share/wasi-sysroot|g" config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+            echo "WASI_SDK_PATH=$SHADOW" >> $GITHUB_ENV
+            echo "WASI_SYSROOT=$SHADOW/share/wasi-sysroot" >> $GITHUB_ENV
+            # Tripwire: reproduce rustc_llvm's exact derivation and flag
+            # shape against <shared_mutex>; fails the job in seconds if the
+            # multilib hole ever reopens, instead of three hours in.
+            printf '#include <shared_mutex>\nint main(){return 0;}\n' > /tmp/ccfix-probe.cpp
+            "$SHADOW/share/wasi-sysroot/../../bin/wasm32-wasip1-threads-clang++" \
+              -x c++ -std=c++17 -fsyntax-only -pthread --target=wasm32-wasi \
+              --sysroot="$SHADOW/share/wasi-sysroot" /tmp/ccfix-probe.cpp \
+              || { echo "TRIPWIRE FAIL: no-threads multilib selected via shadow SDK derivation"; exit 1; }
+            echo "tripwire OK: shadow-SDK derivation compiles <shared_mutex>"
           fi
           echo "=== config.llvm.toml after patching ==="
           grep -E "wasi|ccfix" config.llvm.toml || true
@@ -811,6 +913,40 @@ jobs:
               }
             ' config.llvm.toml > config.llvm.toml.tmp
             mv config.llvm.toml.tmp config.llvm.toml
+            # rustc_llvm's build.rs (wasm17 series) hard-derives its C++
+            # compiler as $WASI_SYSROOT/../../bin/<target>-clang++ via
+            # cfg.compiler(), bypassing config and env. Serve every such
+            # derivation a wrapper: a shadow SDK whose sysroot is a REAL
+            # directory (`..` resolves physically — a symlinked sysroot dir
+            # would escape back to the raw SDK) with symlinked contents,
+            # and whose bin/ mirrors the SDK with the two triple compilers
+            # replaced by the wrappers.
+            SDK="${WS_FORWARD}/rust/wasi-sdk"
+            SHADOW="${WS_FORWARD}/ccfix-sdk"
+            mkdir -p "$SHADOW/share/wasi-sysroot" "$SHADOW/bin"
+            ln -sf "$SDK/share/wasi-sysroot/"* "$SHADOW/share/wasi-sysroot/"
+            ln -sfn "$SDK/lib" "$SHADOW/lib"
+            ln -sf "$SDK/bin/"* "$SHADOW/bin/"
+            for t in clang clang++; do
+              # the mirror made this name a symlink — writing through it
+              # would clobber the real SDK compiler with a self-exec loop
+              rm -f "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              printf '#!/bin/sh\nexec "%s/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "$SDK" "$t" > "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              chmod +x "$SHADOW/bin/wasm32-wasip1-threads-$t"
+            done
+            sed "s|$SDK/share/wasi-sysroot|$SHADOW/share/wasi-sysroot|g" config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+            echo "WASI_SDK_PATH=$SHADOW" >> $GITHUB_ENV
+            echo "WASI_SYSROOT=$SHADOW/share/wasi-sysroot" >> $GITHUB_ENV
+            # Tripwire: reproduce rustc_llvm's exact derivation and flag
+            # shape against <shared_mutex>; fails the job in seconds if the
+            # multilib hole ever reopens, instead of three hours in.
+            printf '#include <shared_mutex>\nint main(){return 0;}\n' > /tmp/ccfix-probe.cpp
+            "$SHADOW/share/wasi-sysroot/../../bin/wasm32-wasip1-threads-clang++" \
+              -x c++ -std=c++17 -fsyntax-only -pthread --target=wasm32-wasi \
+              --sysroot="$SHADOW/share/wasi-sysroot" /tmp/ccfix-probe.cpp \
+              || { echo "TRIPWIRE FAIL: no-threads multilib selected via shadow SDK derivation"; exit 1; }
+            echo "tripwire OK: shadow-SDK derivation compiles <shared_mutex>"
           fi
           echo "=== config.llvm.toml after patching ==="
           grep -E "wasi|ccfix" config.llvm.toml || true
@@ -959,6 +1095,40 @@ jobs:
               }
             ' config.llvm.toml > config.llvm.toml.tmp
             mv config.llvm.toml.tmp config.llvm.toml
+            # rustc_llvm's build.rs (wasm17 series) hard-derives its C++
+            # compiler as $WASI_SYSROOT/../../bin/<target>-clang++ via
+            # cfg.compiler(), bypassing config and env. Serve every such
+            # derivation a wrapper: a shadow SDK whose sysroot is a REAL
+            # directory (`..` resolves physically — a symlinked sysroot dir
+            # would escape back to the raw SDK) with symlinked contents,
+            # and whose bin/ mirrors the SDK with the two triple compilers
+            # replaced by the wrappers.
+            SDK="${WS_FORWARD}/rust/wasi-sdk"
+            SHADOW="${WS_FORWARD}/ccfix-sdk"
+            mkdir -p "$SHADOW/share/wasi-sysroot" "$SHADOW/bin"
+            ln -sf "$SDK/share/wasi-sysroot/"* "$SHADOW/share/wasi-sysroot/"
+            ln -sfn "$SDK/lib" "$SHADOW/lib"
+            ln -sf "$SDK/bin/"* "$SHADOW/bin/"
+            for t in clang clang++; do
+              # the mirror made this name a symlink — writing through it
+              # would clobber the real SDK compiler with a self-exec loop
+              rm -f "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              printf '#!/bin/sh\nexec "%s/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "$SDK" "$t" > "$SHADOW/bin/wasm32-wasip1-threads-$t"
+              chmod +x "$SHADOW/bin/wasm32-wasip1-threads-$t"
+            done
+            sed "s|$SDK/share/wasi-sysroot|$SHADOW/share/wasi-sysroot|g" config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+            echo "WASI_SDK_PATH=$SHADOW" >> $GITHUB_ENV
+            echo "WASI_SYSROOT=$SHADOW/share/wasi-sysroot" >> $GITHUB_ENV
+            # Tripwire: reproduce rustc_llvm's exact derivation and flag
+            # shape against <shared_mutex>; fails the job in seconds if the
+            # multilib hole ever reopens, instead of three hours in.
+            printf '#include <shared_mutex>\nint main(){return 0;}\n' > /tmp/ccfix-probe.cpp
+            "$SHADOW/share/wasi-sysroot/../../bin/wasm32-wasip1-threads-clang++" \
+              -x c++ -std=c++17 -fsyntax-only -pthread --target=wasm32-wasi \
+              --sysroot="$SHADOW/share/wasi-sysroot" /tmp/ccfix-probe.cpp \
+              || { echo "TRIPWIRE FAIL: no-threads multilib selected via shadow SDK derivation"; exit 1; }
+            echo "tripwire OK: shadow-SDK derivation compiles <shared_mutex>"
           fi
           echo "=== config.llvm.toml after patching ==="
           grep -E "wasi|ccfix" config.llvm.toml || true
