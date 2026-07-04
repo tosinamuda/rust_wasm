@@ -43,6 +43,12 @@ jobs:
           cd rust
           git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
           git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
+          # 1.85 dist::Rustc unconditionally ships llvm-objcopy as
+          # rust-objcopy; the trimmed LLVM-for-wasm build has no tools.
+          # Guard the copy, and assert the patch landed so pin drift fails
+          # here in seconds instead of at hour three.
+          perl -0pi -e 's/\Qbuilder.copy_link(&src_dir.join(&llvm_objcopy), &dst_dir.join(&rust_objcopy));\E/let objcopy_src = src_dir.join(&llvm_objcopy); if objcopy_src.exists() { builder.copy_link(&objcopy_src, &dst_dir.join(&rust_objcopy)); }/' src/bootstrap/src/core/build_steps/dist.rs
+          grep -q "objcopy_src.exists" src/bootstrap/src/core/build_steps/dist.rs || { echo "dist.rs objcopy guard FAILED to apply"; exit 1; }
 
       - uses: actions/checkout@v4
         with:
@@ -186,6 +192,15 @@ jobs:
       #     cargo clean
       #     echo "rewrite done"
 
+      - name: restore cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/rust/build
+          key: build-dir-${{ runner.os }}-wasm17-${{ github.run_id }}
+          restore-keys: |
+            build-dir-${{ runner.os }}-wasm17-
+            build-dir-${{ runner.os }}-install-abort-wasm17-
+
       - name: build install
         working-directory: '${{ github.workspace }}/rust'
         env:
@@ -202,7 +217,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ${{ github.workspace }}/rust/build
-          key: build-dir-${{ runner.os }}-${{ github.job }}-wasm17-${{ github.run_id }}
+          key: build-dir-${{ runner.os }}-wasm17-${{ github.run_id }}
 
       - name: prepare abort artifacts
         working-directory: '${{ github.workspace }}/rust'
@@ -240,6 +255,12 @@ jobs:
           cd rust
           git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
           git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
+          # 1.85 dist::Rustc unconditionally ships llvm-objcopy as
+          # rust-objcopy; the trimmed LLVM-for-wasm build has no tools.
+          # Guard the copy, and assert the patch landed so pin drift fails
+          # here in seconds instead of at hour three.
+          perl -0pi -e 's/\Qbuilder.copy_link(&src_dir.join(&llvm_objcopy), &dst_dir.join(&rust_objcopy));\E/let objcopy_src = src_dir.join(&llvm_objcopy); if objcopy_src.exists() { builder.copy_link(&objcopy_src, &dst_dir.join(&rust_objcopy)); }/' src/bootstrap/src/core/build_steps/dist.rs
+          grep -q "objcopy_src.exists" src/bootstrap/src/core/build_steps/dist.rs || { echo "dist.rs objcopy guard FAILED to apply"; exit 1; }
 
       - uses: actions/checkout@v4
         with:
@@ -376,6 +397,14 @@ jobs:
           echo "=== config.llvm.toml after patching ==="
           grep -E "wasi|ccfix" config.llvm.toml || true
 
+      - name: restore cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/rust/build
+          key: build-dir-${{ runner.os }}-unwind-wasm17-${{ github.run_id }}
+          restore-keys: |
+            build-dir-${{ runner.os }}-unwind-wasm17-
+
       - name: build install unwind
         working-directory: '${{ github.workspace }}/rust'
         env:
@@ -383,6 +412,15 @@ jobs:
           RUSTFLAGS: "-Cpanic=unwind -W warnings"
         run: |
           ./x.py install --config config.llvm.toml
+
+      - name: cache build directory
+        # checkpoint even on failure: the next attempt resumes from this
+        # one's compiled state instead of a 3-hour cold start
+        if: ${{ !cancelled() }}
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/rust/build
+          key: build-dir-${{ runner.os }}-unwind-wasm17-${{ github.run_id }}
 
       - name: prepare unwind artifacts
         working-directory: '${{ github.workspace }}/rust'
@@ -530,6 +568,12 @@ jobs:
           cd rust
           git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
           git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
+          # 1.85 dist::Rustc unconditionally ships llvm-objcopy as
+          # rust-objcopy; the trimmed LLVM-for-wasm build has no tools.
+          # Guard the copy, and assert the patch landed so pin drift fails
+          # here in seconds instead of at hour three.
+          perl -0pi -e 's/\Qbuilder.copy_link(&src_dir.join(&llvm_objcopy), &dst_dir.join(&rust_objcopy));\E/let objcopy_src = src_dir.join(&llvm_objcopy); if objcopy_src.exists() { builder.copy_link(&objcopy_src, &dst_dir.join(&rust_objcopy)); }/' src/bootstrap/src/core/build_steps/dist.rs
+          grep -q "objcopy_src.exists" src/bootstrap/src/core/build_steps/dist.rs || { echo "dist.rs objcopy guard FAILED to apply"; exit 1; }
 
       - uses: actions/checkout@v4
         with:
@@ -700,9 +744,10 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/rust/build
-          key: build-dir-${{ runner.os }}-${{ github.job }}-wasm17-${{ github.run_id }}
+          key: build-dir-${{ runner.os }}-wasm17-${{ github.run_id }}
           restore-keys: |
-            build-dir-${{ runner.os }}-${{ github.job }}-wasm17-
+            build-dir-${{ runner.os }}-wasm17-
+            build-dir-${{ runner.os }}-install-abort-wasm17-
 
       - name: install toolchain-for-building-rustc
         working-directory: '${{ github.workspace }}/rust'
@@ -861,6 +906,12 @@ jobs:
           cd rust
           git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
           git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
+          # 1.85 dist::Rustc unconditionally ships llvm-objcopy as
+          # rust-objcopy; the trimmed LLVM-for-wasm build has no tools.
+          # Guard the copy, and assert the patch landed so pin drift fails
+          # here in seconds instead of at hour three.
+          perl -0pi -e 's/\Qbuilder.copy_link(&src_dir.join(&llvm_objcopy), &dst_dir.join(&rust_objcopy));\E/let objcopy_src = src_dir.join(&llvm_objcopy); if objcopy_src.exists() { builder.copy_link(&objcopy_src, &dst_dir.join(&rust_objcopy)); }/' src/bootstrap/src/core/build_steps/dist.rs
+          grep -q "objcopy_src.exists" src/bootstrap/src/core/build_steps/dist.rs || { echo "dist.rs objcopy guard FAILED to apply"; exit 1; }
 
       - uses: actions/checkout@v4
         with:
@@ -1057,6 +1108,12 @@ jobs:
           cd rust
           git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
           git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
+          # 1.85 dist::Rustc unconditionally ships llvm-objcopy as
+          # rust-objcopy; the trimmed LLVM-for-wasm build has no tools.
+          # Guard the copy, and assert the patch landed so pin drift fails
+          # here in seconds instead of at hour three.
+          perl -0pi -e 's/\Qbuilder.copy_link(&src_dir.join(&llvm_objcopy), &dst_dir.join(&rust_objcopy));\E/let objcopy_src = src_dir.join(&llvm_objcopy); if objcopy_src.exists() { builder.copy_link(&objcopy_src, &dst_dir.join(&rust_objcopy)); }/' src/bootstrap/src/core/build_steps/dist.rs
+          grep -q "objcopy_src.exists" src/bootstrap/src/core/build_steps/dist.rs || { echo "dist.rs objcopy guard FAILED to apply"; exit 1; }
 
       - uses: actions/checkout@v4
         with:
