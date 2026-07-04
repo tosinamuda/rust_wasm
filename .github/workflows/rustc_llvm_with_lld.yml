@@ -41,8 +41,8 @@ jobs:
       - name: checkout
         run: |
           cd rust
-          git fetch origin compile_rustc_for_wasm16_cargo --depth 40
-          git checkout cf327c2068549194a29160499c2ecafa9061e46e
+          git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
+          git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
 
       - uses: actions/checkout@v4
         with:
@@ -165,8 +165,8 @@ jobs:
       - name: checkout
         run: |
           cd rust
-          git fetch origin compile_rustc_for_wasm16_cargo --depth 40
-          git checkout cf327c2068549194a29160499c2ecafa9061e46e
+          git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
+          git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
 
       - uses: actions/checkout@v4
         with:
@@ -386,8 +386,8 @@ jobs:
       - name: checkout
         run: |
           cd rust
-          git fetch origin compile_rustc_for_wasm16_cargo --depth 40
-          git checkout cf327c2068549194a29160499c2ecafa9061e46e
+          git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
+          git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
 
       - uses: actions/checkout@v4
         with:
@@ -646,8 +646,8 @@ jobs:
       - name: checkout
         run: |
           cd rust
-          git fetch origin compile_rustc_for_wasm16_cargo --depth 40
-          git checkout cf327c2068549194a29160499c2ecafa9061e46e
+          git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
+          git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
 
       - uses: actions/checkout@v4
         with:
@@ -773,8 +773,8 @@ jobs:
       - name: checkout
         run: |
           cd rust
-          git fetch origin compile_rustc_for_wasm16_cargo --depth 40
-          git checkout cf327c2068549194a29160499c2ecafa9061e46e
+          git fetch origin f7a223c1c21d00cbd63b75f8836b8e64192f24b5 --depth 1
+          git checkout f7a223c1c21d00cbd63b75f8836b8e64192f24b5  # compile_rustc_for_wasm17 HEAD: rustc 1.85.0, edition-2024 stable
 
       - uses: actions/checkout@v4
         with:
