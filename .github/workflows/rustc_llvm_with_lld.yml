@@ -119,6 +119,10 @@ jobs:
               printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
               chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
             done
+            # bootstrap and cc derive sibling tools (llvm-ar, ranlib, clang
+            # for family probes, …) from the configured cc's directory —
+            # mirror the SDK bin so every derived path resolves.
+            ln -sf "${WS_FORWARD}/rust/wasi-sdk/bin/"* "${WS_FORWARD}/ccfix/"
             awk -v ws="${WS_FORWARD}" '
               { print }
               /^\[target\..wasm32-wasip1-threads.\]$/ {
@@ -264,6 +268,10 @@ jobs:
               printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
               chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
             done
+            # bootstrap and cc derive sibling tools (llvm-ar, ranlib, clang
+            # for family probes, …) from the configured cc's directory —
+            # mirror the SDK bin so every derived path resolves.
+            ln -sf "${WS_FORWARD}/rust/wasi-sdk/bin/"* "${WS_FORWARD}/ccfix/"
             awk -v ws="${WS_FORWARD}" '
               { print }
               /^\[target\..wasm32-wasip1-threads.\]$/ {
@@ -640,6 +648,10 @@ jobs:
               printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
               chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
             done
+            # bootstrap and cc derive sibling tools (llvm-ar, ranlib, clang
+            # for family probes, …) from the configured cc's directory —
+            # mirror the SDK bin so every derived path resolves.
+            ln -sf "${WS_FORWARD}/rust/wasi-sdk/bin/"* "${WS_FORWARD}/ccfix/"
             awk -v ws="${WS_FORWARD}" '
               { print }
               /^\[target\..wasm32-wasip1-threads.\]$/ {
@@ -787,6 +799,10 @@ jobs:
               printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
               chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
             done
+            # bootstrap and cc derive sibling tools (llvm-ar, ranlib, clang
+            # for family probes, …) from the configured cc's directory —
+            # mirror the SDK bin so every derived path resolves.
+            ln -sf "${WS_FORWARD}/rust/wasi-sdk/bin/"* "${WS_FORWARD}/ccfix/"
             awk -v ws="${WS_FORWARD}" '
               { print }
               /^\[target\..wasm32-wasip1-threads.\]$/ {
@@ -931,6 +947,10 @@ jobs:
               printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
               chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
             done
+            # bootstrap and cc derive sibling tools (llvm-ar, ranlib, clang
+            # for family probes, …) from the configured cc's directory —
+            # mirror the SDK bin so every derived path resolves.
+            ln -sf "${WS_FORWARD}/rust/wasi-sdk/bin/"* "${WS_FORWARD}/ccfix/"
             awk -v ws="${WS_FORWARD}" '
               { print }
               /^\[target\..wasm32-wasip1-threads.\]$/ {
