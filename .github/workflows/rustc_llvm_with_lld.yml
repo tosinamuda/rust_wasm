@@ -107,8 +107,29 @@ jobs:
           # Fallback for any other occurrences
           sed "s|wasi-sdk-24\.0-[^/\"]*|${WS_FORWARD}/rust/wasi-sdk|g" config.llvm.toml > config.llvm.toml.tmp
           mv config.llvm.toml.tmp config.llvm.toml
+          # cc >= 1.2 (in the 1.85 tree) rewrites wasm32-wasip1-threads to
+          # --target=wasm32-wasi, which selects wasi-sdk's no-threads libc++
+          # multilib and breaks rustc_llvm's C++ on <shared_mutex>. Route the
+          # target's compiles through wrappers that re-assert the threads
+          # triple as the last --target (clang: last one wins); setting config
+          # cc/cxx beats bootstrap's WASI_SDK_PATH default resolution.
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            mkdir -p "${WS_FORWARD}/ccfix"
+            for t in clang clang++; do
+              printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+              chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+            done
+            awk -v ws="${WS_FORWARD}" '
+              { print }
+              /^\[target\..wasm32-wasip1-threads.\]$/ {
+                print "cc = \"" ws "/ccfix/wasip1-threads-clang\""
+                print "cxx = \"" ws "/ccfix/wasip1-threads-clang++\""
+              }
+            ' config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+          fi
           echo "=== config.llvm.toml after patching ==="
-          grep wasi config.llvm.toml || true
+          grep -E "wasi|ccfix" config.llvm.toml || true
 
       # - name: rewrite
       #   run: |
@@ -231,8 +252,29 @@ jobs:
           # Fallback for any other occurrences
           sed "s|wasi-sdk-24\.0-[^/\"]*|${WS_FORWARD}/rust/wasi-sdk|g" config.llvm.toml > config.llvm.toml.tmp
           mv config.llvm.toml.tmp config.llvm.toml
+          # cc >= 1.2 (in the 1.85 tree) rewrites wasm32-wasip1-threads to
+          # --target=wasm32-wasi, which selects wasi-sdk's no-threads libc++
+          # multilib and breaks rustc_llvm's C++ on <shared_mutex>. Route the
+          # target's compiles through wrappers that re-assert the threads
+          # triple as the last --target (clang: last one wins); setting config
+          # cc/cxx beats bootstrap's WASI_SDK_PATH default resolution.
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            mkdir -p "${WS_FORWARD}/ccfix"
+            for t in clang clang++; do
+              printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+              chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+            done
+            awk -v ws="${WS_FORWARD}" '
+              { print }
+              /^\[target\..wasm32-wasip1-threads.\]$/ {
+                print "cc = \"" ws "/ccfix/wasip1-threads-clang\""
+                print "cxx = \"" ws "/ccfix/wasip1-threads-clang++\""
+              }
+            ' config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+          fi
           echo "=== config.llvm.toml after patching ==="
-          grep wasi config.llvm.toml || true
+          grep -E "wasi|ccfix" config.llvm.toml || true
 
       - name: build install unwind
         working-directory: '${{ github.workspace }}/rust'
@@ -586,8 +628,29 @@ jobs:
           # Fallback for any other occurrences
           sed "s|wasi-sdk-24\.0-[^/\"]*|${WS_FORWARD}/rust/wasi-sdk|g" config.llvm.toml > config.llvm.toml.tmp
           mv config.llvm.toml.tmp config.llvm.toml
+          # cc >= 1.2 (in the 1.85 tree) rewrites wasm32-wasip1-threads to
+          # --target=wasm32-wasi, which selects wasi-sdk's no-threads libc++
+          # multilib and breaks rustc_llvm's C++ on <shared_mutex>. Route the
+          # target's compiles through wrappers that re-assert the threads
+          # triple as the last --target (clang: last one wins); setting config
+          # cc/cxx beats bootstrap's WASI_SDK_PATH default resolution.
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            mkdir -p "${WS_FORWARD}/ccfix"
+            for t in clang clang++; do
+              printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+              chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+            done
+            awk -v ws="${WS_FORWARD}" '
+              { print }
+              /^\[target\..wasm32-wasip1-threads.\]$/ {
+                print "cc = \"" ws "/ccfix/wasip1-threads-clang\""
+                print "cxx = \"" ws "/ccfix/wasip1-threads-clang++\""
+              }
+            ' config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+          fi
           echo "=== config.llvm.toml after patching ==="
-          grep wasi config.llvm.toml || true
+          grep -E "wasi|ccfix" config.llvm.toml || true
 
       - name: build dist
         working-directory: '${{ github.workspace }}/rust'
@@ -712,8 +775,29 @@ jobs:
           # Fallback for any other occurrences
           sed "s|wasi-sdk-24\.0-[^/\"]*|${WS_FORWARD}/rust/wasi-sdk|g" config.llvm.toml > config.llvm.toml.tmp
           mv config.llvm.toml.tmp config.llvm.toml
+          # cc >= 1.2 (in the 1.85 tree) rewrites wasm32-wasip1-threads to
+          # --target=wasm32-wasi, which selects wasi-sdk's no-threads libc++
+          # multilib and breaks rustc_llvm's C++ on <shared_mutex>. Route the
+          # target's compiles through wrappers that re-assert the threads
+          # triple as the last --target (clang: last one wins); setting config
+          # cc/cxx beats bootstrap's WASI_SDK_PATH default resolution.
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            mkdir -p "${WS_FORWARD}/ccfix"
+            for t in clang clang++; do
+              printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+              chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+            done
+            awk -v ws="${WS_FORWARD}" '
+              { print }
+              /^\[target\..wasm32-wasip1-threads.\]$/ {
+                print "cc = \"" ws "/ccfix/wasip1-threads-clang\""
+                print "cxx = \"" ws "/ccfix/wasip1-threads-clang++\""
+              }
+            ' config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+          fi
           echo "=== config.llvm.toml after patching ==="
-          grep wasi config.llvm.toml || true
+          grep -E "wasi|ccfix" config.llvm.toml || true
 
       - name: restore cache
         uses: actions/cache/restore@v4
@@ -835,8 +919,29 @@ jobs:
           # Fallback for any other occurrences
           sed "s|wasi-sdk-24\.0-[^/\"]*|${WS_FORWARD}/rust/wasi-sdk|g" config.llvm.toml > config.llvm.toml.tmp
           mv config.llvm.toml.tmp config.llvm.toml
+          # cc >= 1.2 (in the 1.85 tree) rewrites wasm32-wasip1-threads to
+          # --target=wasm32-wasi, which selects wasi-sdk's no-threads libc++
+          # multilib and breaks rustc_llvm's C++ on <shared_mutex>. Route the
+          # target's compiles through wrappers that re-assert the threads
+          # triple as the last --target (clang: last one wins); setting config
+          # cc/cxx beats bootstrap's WASI_SDK_PATH default resolution.
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            mkdir -p "${WS_FORWARD}/ccfix"
+            for t in clang clang++; do
+              printf '#!/bin/sh\nexec "%s/rust/wasi-sdk/bin/wasm32-wasip1-threads-%s" "$@" --target=wasm32-wasip1-threads\n' "${WS_FORWARD}" "$t" > "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+              chmod +x "${WS_FORWARD}/ccfix/wasip1-threads-$t"
+            done
+            awk -v ws="${WS_FORWARD}" '
+              { print }
+              /^\[target\..wasm32-wasip1-threads.\]$/ {
+                print "cc = \"" ws "/ccfix/wasip1-threads-clang\""
+                print "cxx = \"" ws "/ccfix/wasip1-threads-clang++\""
+              }
+            ' config.llvm.toml > config.llvm.toml.tmp
+            mv config.llvm.toml.tmp config.llvm.toml
+          fi
           echo "=== config.llvm.toml after patching ==="
-          grep wasi config.llvm.toml || true
+          grep -E "wasi|ccfix" config.llvm.toml || true
 
       - name: Set up MinGW
         uses: egor-tensin/setup-mingw@v2.2.0
