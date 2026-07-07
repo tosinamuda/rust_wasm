@@ -94,9 +94,11 @@ jobs:
           # Lean build: rustc only ever codegens wasm32 -> keep only the
           # WebAssembly LLVM backend, and trim [build] target to wasm so
           # bootstrap doesn't demand the X86 backend it no longer has.
-          sed -i 's|^targets = .*|targets = "WebAssembly"|' config.llvm.toml
-          sed -i 's|^experimental-targets = .*|experimental-targets = ""|' config.llvm.toml
-          sed -i 's|^target = .*|target = ["wasm32-wasip1", "wasm32-wasip1-threads"]|' config.llvm.toml
+          sed -i -E 's|^targets[[:space:]]*=.*|targets = "WebAssembly"|' config.llvm.toml
+          sed -i -E 's|^experimental-targets[[:space:]]*=.*|experimental-targets = ""|' config.llvm.toml
+          sed -i -E 's|^target[[:space:]]*=.*|target = ["wasm32-wasip1", "wasm32-wasip1-threads"]|' config.llvm.toml
+          echo "=== lean-config check: LLVM targets + build target after override ==="
+          grep -nE '^(targets|experimental-targets|target)[[:space:]]*=' config.llvm.toml || echo "WARN: lean override matched nothing!"
           
           # Convert workspace path to forward slashes for TOML compatibility
           WS_FORWARD=$(echo "${{ github.workspace }}" | tr '\\' '/')
@@ -224,9 +226,11 @@ jobs:
           # Lean build: rustc only ever codegens wasm32 -> keep only the
           # WebAssembly LLVM backend, and trim [build] target to wasm so
           # bootstrap doesn't demand the X86 backend it no longer has.
-          sed -i 's|^targets = .*|targets = "WebAssembly"|' config.llvm.toml
-          sed -i 's|^experimental-targets = .*|experimental-targets = ""|' config.llvm.toml
-          sed -i 's|^target = .*|target = ["wasm32-wasip1", "wasm32-wasip1-threads"]|' config.llvm.toml
+          sed -i -E 's|^targets[[:space:]]*=.*|targets = "WebAssembly"|' config.llvm.toml
+          sed -i -E 's|^experimental-targets[[:space:]]*=.*|experimental-targets = ""|' config.llvm.toml
+          sed -i -E 's|^target[[:space:]]*=.*|target = ["wasm32-wasip1", "wasm32-wasip1-threads"]|' config.llvm.toml
+          echo "=== lean-config check: LLVM targets + build target after override ==="
+          grep -nE '^(targets|experimental-targets|target)[[:space:]]*=' config.llvm.toml || echo "WARN: lean override matched nothing!"
           
           # Convert workspace path to forward slashes for TOML compatibility
           WS_FORWARD=$(echo "${{ github.workspace }}" | tr '\\' '/')
