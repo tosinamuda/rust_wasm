@@ -91,13 +91,13 @@ jobs:
         run: |
           cargo install --git https://github.com/oligamiq/toolchain-for-building-rustc
           toolchain-for-building-rustc --tier all --os linux --os windows --os mac -f config.llvm.toml --only-llvm
-          # Lean build: rustc only ever codegens wasm32 -> keep only the
-          # WebAssembly LLVM backend, and trim [build] target to wasm so
-          # bootstrap doesn't demand the X86 backend it no longer has.
-          sed -i -E 's|^targets[[:space:]]*=.*|targets = "WebAssembly"|' config.llvm.toml
+          # Lean build: neutralize the tool's expansion to every LLVM backend;
+          # restore the committed pair. X86 must stay: the stage1 x86-hosted
+          # compiler links this same LLVM and codegens native build scripts
+          # and proc-macros while cross-building the wasm rustc.
+          sed -i -E 's|^targets[[:space:]]*=.*|targets = "WebAssembly;X86"|' config.llvm.toml
           sed -i -E 's|^experimental-targets[[:space:]]*=.*|experimental-targets = ""|' config.llvm.toml
-          sed -i -E 's|^target[[:space:]]*=.*|target = ["wasm32-wasip1", "wasm32-wasip1-threads"]|' config.llvm.toml
-          echo "=== lean-config check: LLVM targets + build target after override ==="
+          echo "=== lean-config check: LLVM targets after override ==="
           grep -nE '^(targets|experimental-targets|target)[[:space:]]*=' config.llvm.toml || echo "WARN: lean override matched nothing!"
           
           # Convert workspace path to forward slashes for TOML compatibility
@@ -223,13 +223,13 @@ jobs:
         run: |
           cargo install --git https://github.com/oligamiq/toolchain-for-building-rustc
           toolchain-for-building-rustc --tier all --os linux --os windows --os mac -f config.llvm.toml --only-llvm
-          # Lean build: rustc only ever codegens wasm32 -> keep only the
-          # WebAssembly LLVM backend, and trim [build] target to wasm so
-          # bootstrap doesn't demand the X86 backend it no longer has.
-          sed -i -E 's|^targets[[:space:]]*=.*|targets = "WebAssembly"|' config.llvm.toml
+          # Lean build: neutralize the tool's expansion to every LLVM backend;
+          # restore the committed pair. X86 must stay: the stage1 x86-hosted
+          # compiler links this same LLVM and codegens native build scripts
+          # and proc-macros while cross-building the wasm rustc.
+          sed -i -E 's|^targets[[:space:]]*=.*|targets = "WebAssembly;X86"|' config.llvm.toml
           sed -i -E 's|^experimental-targets[[:space:]]*=.*|experimental-targets = ""|' config.llvm.toml
-          sed -i -E 's|^target[[:space:]]*=.*|target = ["wasm32-wasip1", "wasm32-wasip1-threads"]|' config.llvm.toml
-          echo "=== lean-config check: LLVM targets + build target after override ==="
+          echo "=== lean-config check: LLVM targets after override ==="
           grep -nE '^(targets|experimental-targets|target)[[:space:]]*=' config.llvm.toml || echo "WARN: lean override matched nothing!"
           
           # Convert workspace path to forward slashes for TOML compatibility
